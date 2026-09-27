@@ -7,7 +7,7 @@ A tiny link shortener with click analytics, built as a playground for testing [R
    |  private network (*.railway.internal)
    +--> [ Postgres ]  links, clicks, daily_stats
    +--> [ Redis ]     link cache, rate limits, click queue
-[ worker ]  <-- Redis queue -> Postgres       (Dockerfile build)
+[ worker ]  <-- Redis queue -> Postgres       (Railpack build)
 [ cron ]    daily: roll up stats, purge old data (Railpack build, cron schedule)
 ```
 
@@ -37,8 +37,16 @@ make test
 
 1. Push this repo to GitHub.
 2. New project → add **Postgres** and **Redis** from the database templates.
-3. Add three services from the same GitHub repo: `api`, `worker`, `cron`. For each, set
-   **Settings → Config-as-code** to `/railway/api.toml`, `/railway/worker.toml` or `/railway/cron.toml`.
+3. Add three services from the same GitHub repo: `api`, `worker`, `cron`. For each, set the build/start
+   commands under **Settings → Build** / **Deploy**:
+
+   | Service | Build command | Start command |
+   |---|---|---|
+   | `api` | `go build -ldflags='-s -w' -o out ./cmd/api` | `./out` |
+   | `worker` | `go build -ldflags='-s -w' -o out ./cmd/worker` | `./out` |
+   | `cron` | `go build -ldflags='-s -w' -o out ./cmd/cron` | `./out` |
+
+   Set `cron`'s **Cron Schedule** (e.g. `15 3 * * *`) under Settings, and its restart policy to Never.
 4. Variables (use reference variables so secrets aren't copy-pasted):
 
    | Variable | api | worker | cron |
@@ -55,7 +63,6 @@ make test
 ## Things to try on Railway
 
 **Platform**
-- Compare the build logs and image sizes of Railpack (api, cron) and the Dockerfile (worker).
 - Push a change under `cmd/worker/` and confirm only the worker redeploys (`watchPatterns`).
 - Break `/healthz` on purpose and watch the deploy fail its healthcheck and keep the old version live.
 - Roll back a deploy from the dashboard.
@@ -81,7 +88,6 @@ make test
 - Privacy: raw IPs are never stored (salted SHA-256 with a daily rotating salt); only the referrer's host is kept.
 - Redis queue is capped at 100k events so a stopped worker can't exhaust memory.
 - Security headers (CSP, `X-Frame-Options`, `nosniff`, `Referrer-Policy: no-referrer`, HSTS behind HTTPS).
-- Worker image is distroless, non-root, ~21 MB.
 
 Known trade-off: the worker pops events with `BRPOP`, so a batch in flight is lost if the process is killed hard
 between popping and inserting. `BLMOVE` into a processing list would fix that.
