@@ -1,0 +1,8 @@
+# Config-as-code for the `worker` service. In Railway: service Settings -> Config-as-code -> /railway/worker.toml
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+watchPatterns = ["cmd/worker/**", "internal/**", "go.mod", "go.sum", "Dockerfile", "railway/worker.toml"]
+
+[deploy]
+restartPolicyType = "ALWAYS"
