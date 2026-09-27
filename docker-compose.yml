@@ -1,0 +1,15 @@
+# Local Postgres + Redis for development. Ports bind to localhost only.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: spur
+      POSTGRES_PASSWORD: spur
+      POSTGRES_DB: spur
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  redis:
+    image: redis:7-alpine
+    ports: ["127.0.0.1:6379:6379"]
+volumes:
+  pgdata:
