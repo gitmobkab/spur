@@ -63,7 +63,8 @@ make test
 ## Things to try on Railway
 
 **Platform**
-- Push a change under `cmd/worker/` and confirm only the worker redeploys (`watchPatterns`).
+- Set each service's **Settings → Watch Paths** (e.g. `cmd/worker/**`, `internal/**`, `go.mod`, `go.sum` for the worker),
+  then push a change under `cmd/worker/` and confirm only the worker redeploys.
 - Break `/healthz` on purpose and watch the deploy fail its healthcheck and keep the old version live.
 - Roll back a deploy from the dashboard.
 - Scale `api` to 2+ replicas. Migrations are guarded by an advisory lock, so boots don't race.
